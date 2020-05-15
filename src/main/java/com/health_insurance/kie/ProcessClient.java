@@ -1,8 +1,5 @@
 package com.health_insurance.kie;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,49 +15,47 @@ import com.health_insurance.phm_model.Task;
 import com.health_insurance.phm_model.TaskActorAssignment;
 import com.health_insurance.phm_model.Trigger;
 
-import org.kie.api.KieServices;
-import org.kie.api.command.BatchExecutionCommand;
-import org.kie.api.command.Command;
-import org.kie.api.command.KieCommands;
-import org.kie.api.runtime.ExecutionResults;
 import org.kie.server.api.marshalling.MarshallingFormat;
 import org.kie.server.api.model.KieContainerResource;
 import org.kie.server.api.model.KieContainerResourceList;
 import org.kie.server.api.model.KieServerInfo;
-import org.kie.server.api.model.ServiceResponse;
 import org.kie.server.api.model.definition.ProcessDefinition;
-import org.kie.server.api.model.KieServiceResponse; 
 import org.kie.server.client.KieServicesClient;
 import org.kie.server.client.KieServicesConfiguration;
 import org.kie.server.client.KieServicesFactory;
 import org.kie.server.client.ProcessServicesClient;
 import org.kie.server.client.QueryServicesClient;
-import org.kie.server.client.RuleServicesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
-@Service("businessAutomationServiceClient")
-public class BusinessAutomationClient {
-  private static final Logger LOG = LoggerFactory.getLogger(BusinessAutomationClient.class);
+@Configuration
+@PropertySource(name = "servers", value = "servers.properties")
+@Service("processServiceClient")
+public class ProcessClient {
+  private static final Logger LOG = LoggerFactory.getLogger(ProcessClient.class);
 
-  @Value("${kie.server.url:http://localhost:8080/kie-server/services/rest/server}")
-  String kieServerUrl;
-  @Value("${kie.server.user:kieAdmin}")
-  String kieServerUser;
-  @Value("${kie.server.password}")
-  String kieServerPassword;
+  @Value("${kie.processkieserver.url}")
+  static String kieServerUrl = "http://localhost:8091/rest/server";
+  //static String kieServerUrl = "http://localhost:8080/kie-server/services/rest/server";
+  @Value("${kie.processkieserver.user}")
+  static String kieServerUser = "kieserver";
+  @Value("${kie.processkieserver.password}")
+  static String kieServerPassword = "kieserver1!";
 
   private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
   private static KieServicesConfiguration conf;
   private static KieServicesClient kieServicesClient;
 
-  public BusinessAutomationClient() {
+  public ProcessClient() {
+    // Empty constructor.
   }
 
   @PostConstruct
-  public void initialize() {
+  public static void initialize() {
     LOG.info("\n=== Initializing Kie Client ===\n");
     LOG.info("\t connecting to {}", kieServerUrl);
     conf = KieServicesFactory.newRestConfiguration(kieServerUrl, kieServerUser, kieServerPassword);
@@ -85,7 +80,7 @@ public class BusinessAutomationClient {
     LOG.info("=== Kie Client initialization done ===\n");
   }
 
-  public List<String> listCapabilities() {
+  public static List<String> listCapabilities() {
     KieServerInfo serverInfo = kieServicesClient.getServerInfo().getResult();
     LOG.info("Kie Server capabilities:");
     serverInfo.getCapabilities().forEach(c -> LOG.info("\t" + c));
@@ -116,57 +111,6 @@ public class BusinessAutomationClient {
   }  
 
   /**
-   * Execute a batch commands on a remote kie-server
-   * 
-   * @param containerId
-   * @param sessionName
-   * @param facts map facts and its key identifiers (used as part of the fact output names)
-   * @return resultFacts map of returned facts and its respective ids
-   */
-  public Map<String ,Object> executeCommands(String containerId, String sessionName, HashMap<String, Object> facts) {
-    Map<String, Object> resultFacts = new HashMap<String, Object>();
-
-    LOG.info("== Sending commands to the kie-server [" + containerId + "] ==");
-    LOG.info("\t feeding session [" + sessionName + "] up with the following input facts: ");
-    LOG.info("\t\t" + facts);
-    RuleServicesClient rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
-    KieCommands commandsFactory = KieServices.Factory.get().getCommands();
-  
-    // Get PriorApplications from the DB
-    List<Command> kieCommands = new ArrayList<Command>();
-    facts.forEach(
-      (k, o) -> kieCommands.add(commandsFactory.newInsert(o, "isertedFactObject_" + k))
-    );
-
-    BatchExecutionCommand batchCommand = commandsFactory.newBatchExecution(kieCommands, sessionName);
-
-    Command<?> fireAllRules = commandsFactory.newFireAllRules("firedRules");
-    kieCommands.add(fireAllRules);
-    Command<?> getObjects = commandsFactory.newGetObjects("resultFactObjects");
-    kieCommands.add(getObjects);
-
-    ServiceResponse<ExecutionResults> executeResponse = 
-      rulesClient.executeCommandsWithResults(containerId, batchCommand);
-  
-    if(executeResponse.getType() == KieServiceResponse.ResponseType.SUCCESS) {
-      LOG.info("Commands executed with success! Response: ");
-
-      Collection<String> resultFactsIds = executeResponse.getResult().getIdentifiers();
-      LOG.info("\n\tFacts Returned: " + resultFactsIds);
-      resultFactsIds.forEach(
-        id -> resultFacts.put(id, executeResponse.getResult().getValue(id))
-      );
-
-      LOG.info("\t" + resultFacts);
-    } else {
-      LOG.info("Error executing rules. Message: ");
-      LOG.info(executeResponse.getMsg());
-    }
-
-    return resultFacts;
-  }
-
-  /**
    * Start a new process instance given a process definition and a map of process' variables
    * 
    * @param containerId kie container Id
@@ -181,8 +125,7 @@ public class BusinessAutomationClient {
     LOG.info("\t Starting process [" + processDefinitionId + "] with the following input variables: ");
     LOG.info("\t\t" + variables);
     
-    Long processInstanceID = processClient.startProcess(containerId, processDefinitionId, variables);
-    return processInstanceID;
+    return processClient.startProcess(containerId, processDefinitionId, variables);
   }
 
   @PreDestroy

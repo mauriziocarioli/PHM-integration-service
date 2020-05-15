@@ -17,10 +17,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-
-
 /**
- * A simple Camel REST DSL route that implements the greetings service.
+ * Camel REST DSL route that implements 
+ * the integration between Kafka and Drools/jBPM.
  * 
  */
 @Component
@@ -82,9 +81,8 @@ public class CamelRouter extends RouteBuilder {
         from("direct:runKieCommand")
             .routeId("kieServerClient")
             .log("calling kie-server")
-            .to("bean:businessAutomationServiceClient?method=listContainers")
+            .to("bean:decisionServiceClient?method=listContainers")
             .log("${body}");
-            //.to("direct:publishToKafka");
         
         from("direct:publishToKafka")
             .routeId("kafkaPublisher")
@@ -114,7 +112,7 @@ public class CamelRouter extends RouteBuilder {
                 decisionFacts.put(Integer.toString(trigger.getTriggerId()), trigger);
                 e.getIn().setBody(decisionFacts);
             }) // call decision service
-            .toF("bean:businessAutomationServiceClient?method=executeCommands(%s, %s, ${body})", decisionContainerId, decisionSessionName)
+            .toF("bean:decisionServiceClient?method=executeCommands(%s, %s, ${body})", decisionContainerId, decisionSessionName)
             .log("Decision Results: [ ${body} ]")
             .to("seda:startProcess");
 
@@ -132,7 +130,7 @@ public class CamelRouter extends RouteBuilder {
 
                 e.getIn().setBody(processVariables);
             }) // start a new Process instance
-            .toF("bean:businessAutomationServiceClient?method=startProcess(%s, %s, ${body})", processContainerId, processDefinitionId)
+            .toF("bean:processServiceClient?method=startProcess(%s, %s, ${body})", processContainerId, processDefinitionId)
             .log("a process instance has been created with Id ${body}");
         
         // @formatter:on

@@ -8,7 +8,7 @@ It is responsible for routing events from a Kafka Stream Topic to the Red Hat Pr
 Before running this service you need to spin up a Kafka cluster and a Process Server (RHPAM).
 After configuring these two components you can specify the connection properties in the link:src/main/resources/application.properties[application.properties] config file.
 
-> the process project can be imported into Business Central from https://github.com/rafaeltuelho/PHM-integration-service[this repository]
+> the project can be imported into Business Central from https://github.com/rafaeltuelho/PHM-integration-service[this repository]
 
 You can use the following endpoint to generate some test msgs into Kafka Topic:
 
