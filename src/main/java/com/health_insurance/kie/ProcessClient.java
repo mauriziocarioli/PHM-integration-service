@@ -32,18 +32,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
-@Configuration
 @PropertySource(name = "servers", value = "servers.properties")
 @Service("processServiceClient")
 public class ProcessClient {
   private static final Logger LOG = LoggerFactory.getLogger(ProcessClient.class);
 
-  @Value("${kie.processkieserver.url}")
-  static String kieServerUrl = "http://localhost:8091/rest/server";
+  //TODO Can't use @Value because of the static reference issue with these attributes
+
+  //@Value("${kie.processkieserver.url}")
+  //String kieServerUrl;
   //static String kieServerUrl = "http://localhost:8080/kie-server/services/rest/server";
-  @Value("${kie.processkieserver.user}")
+  static String kieServerUrl = "http://localhost:8091/rest/server";
+  //@Value("${kie.processkieserver.user}")
+  //String kieServerUser;
   static String kieServerUser = "kieserver";
-  @Value("${kie.processkieserver.password}")
+  //@Value("${kie.processkieserver.password}")
+  //String kieServerPassword;
   static String kieServerPassword = "kieserver1!";
 
   private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
