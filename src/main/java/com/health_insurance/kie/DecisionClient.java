@@ -59,7 +59,6 @@ public class DecisionClient {
   static String kieServerPassword = "kieserver1!";
 
   private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
-  private static KieServicesConfiguration conf;
   private static KieServicesClient kieServicesClient;
 
   public DecisionClient() {
@@ -67,6 +66,7 @@ public class DecisionClient {
 
   @PostConstruct
   public static void initialize() {
+    final KieServicesConfiguration conf;
     LOG.info("\n=== Initializing Kie Decision Client ===\n");
     LOG.info("\t connecting to {}", kieServerUrl);
     conf = KieServicesFactory.newRestConfiguration(kieServerUrl, kieServerUser, kieServerPassword);
