@@ -51,7 +51,6 @@ public class ProcessClient {
   static String kieServerPassword = "kieserver1!";
 
   private static final MarshallingFormat FORMAT = MarshallingFormat.JSON;
-  private static KieServicesConfiguration conf;
   private static KieServicesClient kieServicesClient;
 
   public ProcessClient() {
@@ -60,6 +59,7 @@ public class ProcessClient {
 
   @PostConstruct
   public static void initialize() {
+    final KieServicesConfiguration conf;
     LOG.info("\n=== Initializing Kie Client ===\n");
     LOG.info("\t connecting to {}", kieServerUrl);
     conf = KieServicesFactory.newRestConfiguration(kieServerUrl, kieServerUser, kieServerPassword);
