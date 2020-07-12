@@ -10,7 +10,6 @@ import javax.annotation.PreDestroy;
 
 import com.health_insurance.phm_model.Reminder;
 import com.health_insurance.phm_model.Response;
-import com.health_insurance.phm_model.Result;
 import com.health_insurance.phm_model.Task;
 import com.health_insurance.phm_model.TaskActorAssignment;
 import com.health_insurance.phm_model.Trigger;
@@ -59,7 +58,7 @@ public class ProcessClient {
   }
 
   @PostConstruct
-  public static void initialize() {
+  public void initialize() {
     final KieServicesConfiguration conf;
     LOG.info("\n=== Initializing Kie Client ===\n");
     LOG.info("\t connecting to {}", kieServerUrl);
@@ -71,7 +70,6 @@ public class ProcessClient {
     //TODO: encapsulate this and expose to the callers
     extraClassList.add(Task.class);
     extraClassList.add(Reminder.class);
-    extraClassList.add(Result.class);
     extraClassList.add(TaskActorAssignment.class);
     extraClassList.add(Trigger.class);
     extraClassList.add(Response.class);
@@ -85,7 +83,7 @@ public class ProcessClient {
     LOG.info("=== Kie Client initialization done ===\n");
   }
 
-  public static List<String> listCapabilities() {
+  public List<String> listCapabilities() {
     KieServerInfo serverInfo = kieServicesClient.getServerInfo().getResult();
     LOG.info("Kie Server capabilities:");
     serverInfo.getCapabilities().forEach(c -> LOG.info("\t" + c));

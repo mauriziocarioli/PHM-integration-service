@@ -73,24 +73,12 @@ public class CamelRouter extends RouteBuilder {
                 .to("direct:publishToKafka");
 
     // Direct routes
-        from("direct:greetingsImpl").description("Greetings REST service implementation route")
-            .routeId("greetings")
-            .streamCaching()
-            .to("bean:greetingsService?method=getGreetings"); 
-            
         from("direct:runKieCommand")
             .routeId("kieServerClient")
             .log("calling kie-server")
             .to("bean:decisionServiceClient?method=listContainers")
             .log("${body}");
         
-        from("direct:publishToKafka")
-            .routeId("kafkaPublisher")
-            .marshal().json(JsonLibrary.Jackson, Trigger.class)
-            .log("publishing [ ${body} ] to kafka topic}")
-            .setHeader(KafkaConstants.KEY, constant("phm-trigger")) // Key of the message
-            .toF("kafka:%s?brokers=%s:%s&serializerClass=%s", kafkaTopic, kafkaHost, kafkaPort, KAFKA_SERIALIZER_CLASS_CONFIG);
-            
         fromF("kafka:%s?brokers=%s:%s&valueDeserializer=%s", kafkaTopic, kafkaHost, kafkaPort, KAFKA_DESERIALIZER_CLASS_CONFIG)
             .routeId("kafkaSubscriber")
             .unmarshal().json(JsonLibrary.Jackson, Trigger.class)
@@ -116,6 +104,13 @@ public class CamelRouter extends RouteBuilder {
             .log("Decision Results: [ ${body} ]")
             .to("seda:startProcess");
 
+        from("direct:publishToKafka")
+            .routeId("kafkaPublisher")
+            .marshal().json(JsonLibrary.Jackson, Trigger.class)
+            .log("publishing [ ${body} ] to kafka topic}")
+            .setHeader(KafkaConstants.KEY, constant("phm-trigger")) // Key of the message
+            .toF("kafka:%s?brokers=%s:%s&serializerClass=%s", kafkaTopic, kafkaHost, kafkaPort, KAFKA_SERIALIZER_CLASS_CONFIG);
+            
         fromF("seda:startProcess?concurrentConsumers=%s", sedaConsumers)
             .routeId("startProcess")
             .process(e -> {
