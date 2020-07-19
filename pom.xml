@@ -8,16 +8,16 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.1.14.RELEASE</version>
+    <version>2.2.8.RELEASE</version>
     <relativePath/>
   </parent>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <spring-boot.version>2.3.1.RELEASE</spring-boot.version>
+    <spring-boot.version>2.2.8.RELEASE</spring-boot.version>
     <camel.version>2.25.1</camel.version>
     <!-- Version higher than 7.38.0.Final will cause a marshalling error -->
-    <drools.version>7.38.0.Final</drools.version>
+    <drools.version>7.39.0.Final</drools.version>
     <!-- version of Arquillian -->
     <arquillian.cube.version>1.17.1</arquillian.cube.version>
     <arquillian.version>1.4.0.Final</arquillian.version>
