@@ -3,12 +3,26 @@
 This service implements the integration routing of the PHM Heathcare Demo. 
 It is responsible for routing events from a Kafka Stream Topic to the Red Hat Process Automation Service.
 
+Read this blog for more information:
+
+https://developers.redhat.com/blog/2020/02/19/designing-an-event-driven-business-process-at-scale-a-health-management-example-part-1/
+
+=== Requirements
+* Spin up a Kafka cluster
+* Clone and install the model in your Maven https://github.com/mauriziocarioli/PHM-Model
+* Clone the rule kjar project https://github.com/mauriziocarioli/PHM-Rules-SB-kjar
+* Clone and install the rule service project https://github.com/mauriziocarioli/PHM-Rules-SB-service
+* Clone the process kjar project https://github.com/mauriziocarioli/PHM-Processes-SB-kjar
+* Clone and install the process service project https://github.com/mauriziocarioli/PHM-Processes-SB-service
+* Configure a mock SMTP server such as https://mailtrap.io
+
+Please read the readme files in the projects listed above
+
+Each service can run in Docker as well as OpenShift as documented in the respective readme files.
+
 == Initial setup
 
-Before running this service you need to spin up a Kafka cluster and a Process Server (RHPAM).
-After configuring these two components you can specify the connection properties in the link:src/main/resources/application.properties[application.properties] config file.
-
-> the project can be imported into Business Central from https://github.com/rafaeltuelho/PHM-integration-service[this repository]
+The requirements above satisfied you can specify the connection properties in the link:src/main/resources/application.properties[application.properties] config file.
 
 You can use the following endpoint to generate some test msgs into Kafka Topic:
 
@@ -21,11 +35,11 @@ You can use the following endpoint to generate some test msgs into Kafka Topic:
 }
 ```
 
-== Stream load
+== Stress load
 
 You can use https://jmeter.apache.org/[Apache JMeter] with https://github.com/GSLabDev/pepper-box[Pepper Box plugin] to load about 10m triggers using this JMeter Test plan link:JMteter_kafka_topic_load_plan.jmx[jmeter/JMteter_kafka_topic_load_plan.jmx]
 
-> before running the test plan make sure your local kafka cluster is up&running.
+> before running the test plan make sure your local Kafka cluster is up & running.
 > expects zookeper listening on `localhost:2181` and broker on `localhost:9092`
 
 > the Pepper Box plugin JAR file is avaiable inside the `jmeter/` dir. Before start JMeter copy this JAR into the `JMETER_HOME/lib/ext`
@@ -41,12 +55,12 @@ You can run this service in the following modes:
 * Single-node OpenShift cluster
 * Standalone on your machine
 
-The most effective way to use this booster is to deploy and run the project on OpenShift.
+The most effective way to use this service is to deploy and run the project on OpenShift.
 
 IMPORTANT: This project requires Java 8 JDK or later and Maven 3.3.x or later.
 
-=== Running the booster on a single-node OpenShift cluster without preinstalled images
-To deploy your booster to a running single-node OpenShift cluster without preinstalled images:
+=== Running the application on a single-node OpenShift cluster without preinstalled images
+To deploy your application to a running single-node OpenShift cluster without preinstalled images:
 
 . Download the project and extract the archive on your local filesystem.
 
@@ -57,14 +71,14 @@ To deploy your booster to a running single-node OpenShift cluster without preins
 $ oc login -u developer -p developer
 ----
 
-. Create a new OpenShift project for the booster:
+. Create a new OpenShift project for the application:
 +
 [source,bash,options="nowrap",subs="attributes+"]
 ----
-$ oc new-project MY_PROJECT_NAME
+$ oc new-project phm-project
 ----
 
-. Import base images in your newly created project (MY_PROJECT_NAME):
+. Import base images in your newly created project (phm-project):
 +
 [source,bash,options="nowrap",subs="attributes+"]
 ----
@@ -75,16 +89,20 @@ $ oc import-image {image-name-version} --from={image-registry}{image-prefix}{ima
 +
 [source,bash,options="nowrap",subs="attributes+"]
 ----
-$ mvn clean -DskipTests fabric8:deploy -Popenshift -Dfabric8.generator.fromMode=istag -Dfabric8.generator.from=MY_PROJECT_NAME/{image-name-version}
+$ mvn clean -DskipTests fabric8:deploy -Popenshift
 ----
-
-. In your browser, navigate to the `MY_PROJECT_NAME` project in the OpenShift console.
+or
+[source,bash,options="nowrap",subs="attributes+"]
+----
+$ mvn clean -DskipTests fabric8:deploy -Popenshift -Dfabric8.generator.fromMode=istag -Dfabric8.generator.from=PHM_PROJECT/{image-name-version}
+----
+. In your browser, navigate to the `phm-project` project in the OpenShift console.
 Wait until you can see that the pod for the `PHM-integration-service` application has started up.
 
 . On the project's `Overview` page, locate the URL for the `PHM-integration-service` application. The URL uses this form:
-`http://PHM-integration-service-MY_PROJECT_NAME.OPENSHIFT_IP_ADDR.nip.io`.
+`http://PHM-integration-service-phm-project.OPENSHIFT_IP_ADDR.nip.io`.
 
-. Click the URL to access the greetings service application and then follow the instructions on that page.
+. Click the URL to access the PHM Integration service application and then follow the instructions on that page.
 
 == Running the booster standalone on your machine
 
