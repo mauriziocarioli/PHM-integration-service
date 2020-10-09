@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.health_insurance.phm_model.Response;
+import com.health_insurance.phm_model.Action;
 import com.health_insurance.phm_model.Trigger;
 
 import org.apache.camel.builder.RouteBuilder;
@@ -95,7 +95,6 @@ public class CamelRouter extends RouteBuilder {
             .process(e -> {
                 LOG.debug("Decision request Body: " + e.getIn().getBody());
                 Trigger trigger = e.getIn().getBody(Trigger.class);
-
                 Map<String, Object> decisionFacts = new HashMap<>();
                 decisionFacts.put(Integer.toString(trigger.getTriggerId()), trigger);
                 e.getIn().setBody(decisionFacts);
@@ -118,10 +117,10 @@ public class CamelRouter extends RouteBuilder {
 
                 Map<String, Object> resultFactObjects = e.getIn().getBody(Map.class);
                 List<?> factsList = (List<?>)resultFactObjects.get("resultFactObjects");
-                List<?> responsesList = factsList.stream().filter(o -> o instanceof Response).collect(Collectors.toList());
+                List<?> responsesList = factsList.stream().filter(o -> o instanceof Action).collect(Collectors.toList());
 
                 Map<String, Object> processVariables = new HashMap<>();
-                processVariables.put("pDataList", responsesList);
+                processVariables.put("actionList", responsesList);
 
                 e.getIn().setBody(processVariables);
             }) // start a new Process instance

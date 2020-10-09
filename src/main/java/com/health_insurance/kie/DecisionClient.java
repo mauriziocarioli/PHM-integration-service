@@ -11,10 +11,7 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import com.health_insurance.phm_model.Reminder;
-import com.health_insurance.phm_model.Response;
-import com.health_insurance.phm_model.Task;
-import com.health_insurance.phm_model.TaskActorAssignment;
+import com.health_insurance.phm_model.Action;
 import com.health_insurance.phm_model.Trigger;
 
 import org.kie.api.KieServices;
@@ -49,8 +46,8 @@ public class DecisionClient {
 
   //@Value("${kie.decisionkieserver.url:http://localhost:8090/rest/server}")
   //private static String kieServerUrl;
-  //static String kieServerUrl = "http://localhost:8080/kie-server/services/rest/server";
-  static String kieServerUrl = "http://localhost:8090/rest/server";
+  static String kieServerUrl = "http://localhost:8080/kie-server/services/rest/server";
+  //static String kieServerUrl = "http://localhost:8090/rest/server";
   //@Value("${kie.decisionkieserver.user:kieserver}")
   //private static String kieServerUser;
   static String kieServerUser = "kieserver";
@@ -76,11 +73,8 @@ public class DecisionClient {
     Set<Class<?>> extraClassList = new HashSet<Class<?>>();
 
     //TODO: encapsulate this and expose to the callers
-    extraClassList.add(Task.class);
-    extraClassList.add(Reminder.class);
-    extraClassList.add(TaskActorAssignment.class);
+    extraClassList.add(Action.class);
     extraClassList.add(Trigger.class);
-    extraClassList.add(Response.class);
     conf.addExtraClasses(extraClassList);
 
     conf.setMarshallingFormat(FORMAT);
@@ -123,19 +117,21 @@ public class DecisionClient {
     LOG.info("== Sending commands to the kie-server [" + containerId + "] ==");
     LOG.info("\t feeding session [" + sessionName + "] up with the following input facts: ");
     LOG.info("\t\t" + facts);
+
     RuleServicesClient rulesClient = kieServicesClient.getServicesClient(RuleServicesClient.class);
+
     KieCommands commandsFactory = KieServices.Factory.get().getCommands();
-  
-    // Get PriorApplications from the DB
     List<Command> kieCommands = new ArrayList<>();
     facts.forEach(
-      (k, o) -> kieCommands.add(commandsFactory.newInsert(o, "isertedFactObject_" + k))
+      (k, o) -> kieCommands.add(commandsFactory.newInsert(o, "insertedFactObject_" + k))
     );
+    kieCommands.add(commandsFactory.newStartProcess("PHM-Rules.RuleFlow"));
 
     BatchExecutionCommand batchCommand = commandsFactory.newBatchExecution(kieCommands, sessionName);
 
     Command<?> fireAllRules = commandsFactory.newFireAllRules("firedRules");
     kieCommands.add(fireAllRules);
+
     Command<?> getObjects = commandsFactory.newGetObjects("resultFactObjects");
     kieCommands.add(getObjects);
 
@@ -144,13 +140,11 @@ public class DecisionClient {
   
     if(executeResponse.getType() == KieServiceResponse.ResponseType.SUCCESS) {
       LOG.info("Commands executed with success! Response: ");
-
       Collection<String> resultFactsIds = executeResponse.getResult().getIdentifiers();
       LOG.info("\n\tFacts Returned: " + resultFactsIds);
       resultFactsIds.forEach(
         id -> resultFacts.put(id, executeResponse.getResult().getValue(id))
       );
-
       LOG.info("\t" + resultFacts);
     } else {
       LOG.info("Error executing rules. Message: ");
