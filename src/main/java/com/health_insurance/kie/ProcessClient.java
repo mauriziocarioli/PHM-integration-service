@@ -8,10 +8,7 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import com.health_insurance.phm_model.Reminder;
-import com.health_insurance.phm_model.Response;
-import com.health_insurance.phm_model.Task;
-import com.health_insurance.phm_model.TaskActorAssignment;
+import com.health_insurance.phm_model.Action;
 import com.health_insurance.phm_model.Trigger;
 
 import org.kie.server.api.marshalling.MarshallingFormat;
@@ -41,8 +38,8 @@ public class ProcessClient {
 
   //@Value("${kie.processkieserver.url}")
   //static String kieServerUrl;
-  //static String kieServerUrl = "http://localhost:8080/kie-server/services/rest/server";
-  static String kieServerUrl = "http://localhost:8091/rest/server";
+  static String kieServerUrl = "http://localhost:8080/kie-server/services/rest/server";
+  //static String kieServerUrl = "http://localhost:8091/rest/server";
   //@Value("${kie.processkieserver.user}")
   //static String kieServerUser;
   static String kieServerUser = "kieserver";
@@ -68,11 +65,8 @@ public class ProcessClient {
     Set<Class<?>> extraClassList = new HashSet<Class<?>>();
 
     //TODO: encapsulate this and expose to the callers
-    extraClassList.add(Task.class);
-    extraClassList.add(Reminder.class);
-    extraClassList.add(TaskActorAssignment.class);
+    extraClassList.add(Action.class);
     extraClassList.add(Trigger.class);
-    extraClassList.add(Response.class);
     conf.addExtraClasses(extraClassList);
 
     conf.setMarshallingFormat(FORMAT);
